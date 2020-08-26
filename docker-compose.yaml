@@ -1,0 +1,60 @@
+nginx-proxy:
+  image: jwilder/nginx-proxy
+  restart: always
+  ports:
+    - "80:80"
+    - "443:443"
+  volumes:
+    - /var/run/docker.sock:/tmp/docker.sock:ro
+    - /home/ubuntu/server/certs:/etc/nginx/certs:ro
+    - /home/ubuntu/server/vhostd:/etc/nginx/vhost.d
+    - /home/ubuntu/server/html:/usr/share/nginx/html
+  labels:
+    - com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy
+
+letsencrypt:
+  image: jrcs/letsencrypt-nginx-proxy-companion
+  restart: always
+  environment:
+    - NGINX_PROXY_CONTAINER=nginx-proxy
+  volumes:
+    - /home/ubuntu/server/certs:/etc/nginx/certs:rw
+    - /home/ubuntu/server/vhostd:/etc/nginx/vhost.d
+    - /home/ubuntu/server/html:/usr/share/nginx/html
+    - /var/run/docker.sock:/var/run/docker.sock:ro
+  volumes_from:
+    - nginx-proxy:rw
+
+www:
+  image: nginx
+  restart: always
+  expose:
+    - "80"
+  volumes:
+    - /home/ubuntu/server/www:/usr/share/nginx/html:ro
+  environment:
+    - VIRTUAL_HOST=jegod.com,www.jegod.com
+    - LETSENCRYPT_HOST=jegod.com,www.jegod.com
+    - LETSENCRYPT_EMAIL=jegodsas@gmail.com
+
+www2:
+  image: nginx
+  restart: always
+  expose:
+    - "80"
+  volumes:
+    - /home/ubuntu/server/correos:/usr/share/nginx/html:ro
+  environment:
+    - VIRTUAL_HOST=sarasa.com,www.sarasa.com,chewin.jegod.com,www.chewin.jegod.com
+    - LETSENCRYPT_HOST=chewin.jegod.com,www.chewin.jegod.com
+    - LETSENCRYPT_EMAIL=jegodsas@gmail.com
+
+rancher:
+  image: rancher/rancher:v2.3.5
+  restart: always
+  expose:
+    - "80"
+  environment:
+    VIRTUAL_HOST: checho.jegod.com,www.checho.jegod.com
+    LETSENCRYPT_HOST: checho.jegod.com
+    LETSENCRYPT_EMAIL: jegodsas@gmail.com
