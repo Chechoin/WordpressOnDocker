@@ -1,0 +1,104 @@
+nginx-proxy:
+  image: jwilder/nginx-proxy
+  labels:
+    com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy: "true"
+  container_name: nginx-proxy
+  restart: always
+  ports:
+    - "80:80"
+    - "443:443"
+  volumes:
+    - /home/ubuntu/server/confd:/etc/nginx/conf.d
+    - /home/ubuntu/server/vhostd:/etc/nginx/vhost.d
+    - /home/ubuntu/server/html:/usr/share/nginx/html
+    - /home/ubuntu/server/certs:/etc/nginx/certs:ro
+    - /var/run/docker.sock:/tmp/docker.sock:ro
+        
+letsencrypt:
+  image: jrcs/letsencrypt-nginx-proxy-companion
+  container_name: nginx-letsencrypt
+  restart: always
+  volumes:
+    - /home/ubuntu/server/confd:/etc/nginx/conf.d
+    - /home/ubuntu/server/vhostd:/etc/nginx/vhost.d
+    - /home/ubuntu/server/html:/usr/share/nginx/html
+    - /home/ubuntu/server/certs:/etc/nginx/certs:rw
+    - /var/run/docker.sock:/var/run/docker.sock:ro
+  environment:
+    - NGINX_DOCKER_GEN_CONTAINER=nginx-proxy
+    - NGINX_PROXY_CONTAINER=nginx-proxy
+  volumes_from: ##Si hay fallas, eliminar esto
+    - nginx-proxy:rw
+
+www:
+  image: nginx
+  restart: always
+  expose:
+    - "80"
+  volumes:
+    - /home/ubuntu/server/www:/usr/share/nginx/html:ro
+  environment:
+    - VIRTUAL_HOST=hola.jegod.com,www.hola.jegod.com
+
+wordpress:
+  image: wordpress:php7.4-apache
+  restart: always
+  expose:
+    - "80"
+  volumes:
+    - /home/ubuntu/server/wordpress:/var/www/html
+  environment:
+    WORDPRESS_DB_HOST: mysql:3306
+    WORDPRESS_DB_USER: root
+    WORDPRESS_DB_PASSWORD: CuentaDeJeGodEnNameCheap#2020!
+    WORDPRESS_DB_NAME: wordpress
+    VIRTUAL_HOST: jegod.com,www.jegod.com
+    LETSENCRYPT_HOST: jegod.com,www.jegod.com
+    LETSENCRYPT_EMAIL: jegodsas@gmail.com
+  links:
+    - mysql:mysql
+
+mysql:
+  image: mariadb:10.5.5-focal
+  restart: always
+  command: --default-authentication-plugin=mysql_native_password
+  environment:
+    MYSQL_DATABASE: wordpress
+    MYSQL_ROOT_PASSWORD: CuentaDeJeGodEnNameCheap#2020!
+    MYSQL_USER: Checho
+    MYSQL_PASSWORD: ChechoMexico#2018!
+  volumes:
+    - /home/ubuntu/server/wordpress/database:/var/lib/mysql
+
+#correos: #NO LOGRE HACER QUE FUNCIONARA
+#  image: analogic/poste.io
+#  container_name: mailserver
+#  restart: always
+#  ports:
+#    - "25:25"
+#    - "110:110"
+#    - "143:143"
+#    - "587:587"
+#    - "465:465"
+#    - "993:993"
+#    - "995:995"
+#    - "4190:4190"
+#  environment:
+#    - LETSENCRYPT_EMAIL=jegodsas@gmail.com
+#    - LETSENCRYPT_HOST=chewin.jegod.com,www.chewin.jegod.com
+#    - VIRTUAL_HOST=chewin.jegod.com,www.chewin.jegod.com
+#    - HTTPS=OFF
+#  volumes:
+#    - /etc/localtime:/etc/localtime:ro #si no funciona, eliminar esta linea
+#    - /home/ubuntu/server/html/well-known:/opt/www/.well-known
+#    - /home/ubuntu/server/correos:/data
+
+#rancher:
+#  image: rancher/rancher:v2.3.5
+#  restart: always
+#  expose:
+#    - "80"
+#  environment:
+#    VIRTUAL_HOST: checho.jegod.com,www.checho.jegod.com
+#    LETSENCRYPT_HOST: checho.jegod.com
+#    LETSENCRYPT_EMAIL: jegodsas@gmail.com
