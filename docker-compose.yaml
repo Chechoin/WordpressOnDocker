@@ -11,7 +11,7 @@ nginx-proxy:
     - /home/ubuntu/server/html:/usr/share/nginx/html
   labels:
     - com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy
-
+  
 letsencrypt:
   image: jrcs/letsencrypt-nginx-proxy-companion
   restart: always
@@ -33,28 +33,63 @@ www:
   volumes:
     - /home/ubuntu/server/www:/usr/share/nginx/html:ro
   environment:
-    - VIRTUAL_HOST=jegod.com,www.jegod.com
-    - LETSENCRYPT_HOST=jegod.com,www.jegod.com
-    - LETSENCRYPT_EMAIL=jegodsas@gmail.com
+    - VIRTUAL_HOST=hola.jegod.com,www.hola.jegod.com
 
-www2:
-  image: nginx
+wordpress:
+  image: wordpress:php7.4-apache
   restart: always
   expose:
     - "80"
   volumes:
-    - /home/ubuntu/server/correos:/usr/share/nginx/html:ro
+    - /home/ubuntu/server/wordpress:/var/www/html
   environment:
-    - VIRTUAL_HOST=sarasa.com,www.sarasa.com,chewin.jegod.com,www.chewin.jegod.com
-    - LETSENCRYPT_HOST=chewin.jegod.com,www.chewin.jegod.com
-    - LETSENCRYPT_EMAIL=jegodsas@gmail.com
+    WORDPRESS_DB_HOST: mysql:3306
+    WORDPRESS_DB_USER: root
+    WORDPRESS_DB_PASSWORD: CuentaDeJeGodEnNameCheap#2020!
+    WORDPRESS_DB_NAME: wordpress
+    VIRTUAL_HOST: jegod.com,www.jegod.com
+    LETSENCRYPT_HOST: jegod.com,www.jegod.com
+    LETSENCRYPT_EMAIL: jegodsas@gmail.com
+  links:
+    - mysql:mysql
 
-rancher:
-  image: rancher/rancher:v2.3.5
+mysql:
+  image: mariadb:10.5.5-focal
+  restart: always
+  command: --default-authentication-plugin=mysql_native_password
+  environment:
+    MYSQL_DATABASE: wordpress
+    MYSQL_ROOT_PASSWORD: CuentaDeJeGodEnNameCheap#2020!
+    MYSQL_USER: Checho
+    MYSQL_PASSWORD: ChechoMexico#2018!
+  volumes:
+    - /home/ubuntu/server/wordpress/database:/var/lib/mysql
+
+correos:
+  image: analogic/poste.io
   restart: always
   expose:
+    - "25"
     - "80"
+    - "443"
+    - "110"
+    - "143"
+    - "465"
+    - "587"
+    - "993"
+    - "995"
+  volumes:
+    - /home/ubuntu/server/correos:/data
   environment:
-    VIRTUAL_HOST: checho.jegod.com,www.checho.jegod.com
-    LETSENCRYPT_HOST: checho.jegod.com
-    LETSENCRYPT_EMAIL: jegodsas@gmail.com
+    - HTTPS=ON
+    - VIRTUAL_HOST=sarasa.com,www.sarasa.com,chewin.jegod.com,www.chewin.jegod.com
+
+#rancher:
+#  image: rancher/rancher:v2.3.5
+#  restart: always
+#  expose:
+#    - "80"
+#  environment:
+#    VIRTUAL_HOST: checho.jegod.com,www.checho.jegod.com
+#    LETSENCRYPT_HOST: checho.jegod.com
+#    LETSENCRYPT_EMAIL: jegodsas@gmail.com
