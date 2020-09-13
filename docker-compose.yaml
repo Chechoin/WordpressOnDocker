@@ -74,15 +74,15 @@ correos:
   image: analogic/poste.io
   container_name: mailserver
   restart: always
-  expose:
+  ports:
     - "25:25"
     - "110:110"
     - "143:143"
-    - "443:443"
     - "587:587"
     - "465:465"
     - "993:993"
     - "995:995"
+    - "4190:4190"
   environment:
     - LETSENCRYPT_EMAIL=jegodsas@gmail.com
     - LETSENCRYPT_HOST=chewin.jegod.com,www.chewin.jegod.com
@@ -92,7 +92,6 @@ correos:
     - /etc/localtime:/etc/localtime:ro #si no funciona, eliminar esta linea
     - /home/ubuntu/server/html/well-known:/opt/www/.well-known
     - /home/ubuntu/server/correos:/data
-    - /data/mailserver:/data
 
 #rancher:
 #  image: rancher/rancher:v2.3.5
