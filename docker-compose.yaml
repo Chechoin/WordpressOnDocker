@@ -92,7 +92,6 @@ correos:
     - /etc/localtime:/etc/localtime:ro #si no funciona, eliminar esta linea
     - /home/ubuntu/server/html/well-known:/opt/www/.well-known
     - /home/ubuntu/server/correos:/data
-    - /data/mailserver:/data
 
 #rancher:
 #  image: rancher/rancher:v2.3.5
